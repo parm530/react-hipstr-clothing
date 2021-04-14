@@ -7,7 +7,7 @@ import ShopPage from './pages/shop/shop.component';
 import Header from './components/header/header.component';
 import SignInAndSignUp from './pages/sign-in-and-sign-up/sign-in-and-sign-up.component';
 
-import { auth } from './firebase/firebase.utils';
+import { auth, createUserProfileDocument } from './firebase/firebase.utils';
 
  class App extends React.Component {
 	constructor(props) {
@@ -23,10 +23,27 @@ import { auth } from './firebase/firebase.utils';
 	componentDidMount() {
 		// opens a subscription to firebase
 		// to notify our app when a user has logged in or logged out
-		this.unsubscribeFromAuth = auth.onAuthStateChanged(user => {
-			this.setState({ currentUser: user});
+		this.unsubscribeFromAuth = auth.onAuthStateChanged(async userAuth => {
+			// this.setState({ currentUser: user});
+			// createUserProfileDocument(user);
+			if (userAuth) {
+				const userRef = await createUserProfileDocument(userAuth);
 
-			console.log(user);
+				// if the snapshot has changed
+				// .onSnapshot listens for changes
+				userRef.onSnapshot( snapshot => {
+					// snapshot current state of the userRef object
+					this.setState({
+						currentUser: {
+							id: snapshot.id,
+							...snapshot.data()
+						}
+					});
+					console.log(this.state);
+				});
+			}
+
+			this.setState({ currentUser: userAuth });
 		});
 	}
 	
